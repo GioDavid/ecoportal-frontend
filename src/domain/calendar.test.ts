@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   getEventsForDay,
   getMonthDays,
+  getVisibleEventInterval,
   getWeekDays,
 } from './calendar'
 import type { CalendarEvent } from './event'
@@ -260,5 +261,156 @@ describe('getEventsForDay', () => {
     expect(events[1]).toBe(second)
     expect(first).toEqual(originalFirst)
     expect(second).toEqual(originalSecond)
+  })
+})
+
+describe('getVisibleEventInterval', () => {
+  const day = localDate(2026, 5, 24)
+
+  it('returns the correct start and duration minutes for a same-day event', () => {
+    const event = createEvent({
+      id: 'morning',
+      startDate: '2026-06-24T09:00:00',
+      endDate: '2026-06-24T10:00:00',
+    })
+
+    expect(getVisibleEventInterval(event, day)).toEqual({
+      startMinutes: 120,
+      durationMinutes: 60,
+      continuesBefore: false,
+      continuesAfter: false,
+    })
+  })
+
+  it('returns null when an event ends exactly at 07:00', () => {
+    const event = createEvent({
+      id: 'ends-at-seven',
+      startDate: '2026-06-24T06:00:00',
+      endDate: '2026-06-24T07:00:00',
+    })
+
+    expect(getVisibleEventInterval(event, day)).toBeNull()
+  })
+
+  it('returns null when an event starts exactly at 20:00', () => {
+    const event = createEvent({
+      id: 'starts-at-eight',
+      startDate: '2026-06-24T20:00:00',
+      endDate: '2026-06-24T21:00:00',
+    })
+
+    expect(getVisibleEventInterval(event, day)).toBeNull()
+  })
+
+  it('clips 06:30–07:30 to 30 visible minutes', () => {
+    const event = createEvent({
+      id: 'early-partial',
+      startDate: '2026-06-24T06:30:00',
+      endDate: '2026-06-24T07:30:00',
+    })
+
+    expect(getVisibleEventInterval(event, day)).toEqual({
+      startMinutes: 0,
+      durationMinutes: 30,
+      continuesBefore: true,
+      continuesAfter: false,
+    })
+  })
+
+  it('clips 19:30–20:30 to 30 visible minutes', () => {
+    const event = createEvent({
+      id: 'late-partial',
+      startDate: '2026-06-24T19:30:00',
+      endDate: '2026-06-24T20:30:00',
+    })
+
+    expect(getVisibleEventInterval(event, day)).toEqual({
+      startMinutes: 750,
+      durationMinutes: 30,
+      continuesBefore: false,
+      continuesAfter: true,
+    })
+  })
+
+  it('clips a full-day spanning event to the entire visible range', () => {
+    const event = createEvent({
+      id: 'spanning',
+      startDate: '2026-06-23T08:00:00',
+      endDate: '2026-06-25T18:00:00',
+    })
+
+    expect(getVisibleEventInterval(event, day)).toEqual({
+      startMinutes: 0,
+      durationMinutes: 780,
+      continuesBefore: true,
+      continuesAfter: true,
+    })
+  })
+
+  it('calculates an overnight event correctly on both affected days', () => {
+    const event = createEvent({
+      id: 'overnight',
+      startDate: '2026-06-24T18:00:00',
+      endDate: '2026-06-25T10:00:00',
+    })
+
+    expect(getVisibleEventInterval(event, localDate(2026, 5, 24))).toEqual({
+      startMinutes: 660,
+      durationMinutes: 120,
+      continuesBefore: false,
+      continuesAfter: true,
+    })
+    expect(getVisibleEventInterval(event, localDate(2026, 5, 25))).toEqual({
+      startMinutes: 0,
+      durationMinutes: 180,
+      continuesBefore: true,
+      continuesAfter: false,
+    })
+  })
+
+  it('returns null for invalid and inverted events', () => {
+    const invalid = createEvent({
+      id: 'invalid',
+      startDate: 'not-a-date',
+      endDate: 'also-not-a-date',
+    })
+    const inverted = createEvent({
+      id: 'inverted',
+      startDate: '2026-06-24T12:00:00',
+      endDate: '2026-06-24T11:00:00',
+    })
+
+    expect(getVisibleEventInterval(invalid, day)).toBeNull()
+    expect(getVisibleEventInterval(inverted, day)).toBeNull()
+  })
+
+  it('supports custom visible start and end hours', () => {
+    const event = createEvent({
+      id: 'custom-window',
+      startDate: '2026-06-24T08:30:00',
+      endDate: '2026-06-24T09:15:00',
+    })
+
+    expect(getVisibleEventInterval(event, day, 8, 18)).toEqual({
+      startMinutes: 30,
+      durationMinutes: 45,
+      continuesBefore: false,
+      continuesAfter: false,
+    })
+  })
+
+  it('does not mutate its inputs', () => {
+    const event = createEvent({
+      id: 'evt-001',
+      startDate: '2026-06-24T09:00:00',
+      endDate: '2026-06-24T10:00:00',
+    })
+    const originalEvent = { ...event }
+    const originalDayTime = day.getTime()
+
+    getVisibleEventInterval(event, day)
+
+    expect(event).toEqual(originalEvent)
+    expect(day.getTime()).toBe(originalDayTime)
   })
 })
