@@ -1,0 +1,31 @@
+[
+    {
+      "id": "evt-001",
+      "type": "meeting",
+      "name": "Weekly safety briefing",
+      "startDate": "2026-06-22T09:00:00",
+      "endDate": "2026-06-22T09:30:00"
+    },
+    {
+      "id": "evt-002",
+      "type": "meeting",
+      "name": "Site A weekly walkthrough",
+      "startDate": "2026-06-23T14:30:00",
+      "endDate": "2026-06-23T15:30:00"
+    },
+    {
+      "id": "evt-003",
+      "type": "meeting",
+      "name": "Contractor toolbox talk",
+      "startDate": "2026-06-24T09:00:00",
+      "endDate": "2026-06-24T10:00:00"
+    },
+    {
+      "id": "evt-004",
+      "type": "meeting",
+      "name": "Quarterly site audit",
+      "startDate": "2026-06-26T13:00:00",
+      "endDate": "2026-06-26T15:00:00"
+    }
+  ]
+  
