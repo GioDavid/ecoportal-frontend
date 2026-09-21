@@ -1,0 +1,20 @@
+---
+description: ecoPortal calendar project constraints
+alwaysApply: true
+---
+
+- specs/requirements.md is the product contract.
+- Do not implement features outside the specification.
+- Use React and strict TypeScript.
+- Do not use any or suppress TypeScript errors.
+- Do not install a calendar rendering library.
+- Calendar views must be implemented by us.
+- Keep date calculations and validation independent from React.
+- Treat timestamps without timezone offsets as local time.
+- Every behavioral change requires automated tests.
+- Include negative and edge-case tests.
+- Preserve keyboard accessibility and descriptive accessible names.
+- Make small, focused changes.
+- Before coding, explain which acceptance requirement is being implemented.
+- Run the narrowest relevant tests after each change.
+- Do not modify the specification merely to make tests pass.
